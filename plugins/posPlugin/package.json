@@ -1,0 +1,42 @@
+{
+  "_from": "git+https://github.com/fullstackmofo/mPos-updated.git",
+  "_id": "posPlugin@1.0.0",
+  "_inBundle": false,
+  "_integrity": "",
+  "_location": "/posPlugin",
+  "_phantomChildren": {},
+  "_requested": {
+    "type": "git",
+    "raw": "git+https://github.com/fullstackmofo/mPos-updated.git",
+    "rawSpec": "git+https://github.com/fullstackmofo/mPos-updated.git",
+    "saveSpec": "git+https://github.com/fullstackmofo/mPos-updated.git",
+    "fetchSpec": "https://github.com/fullstackmofo/mPos-updated.git",
+    "gitCommittish": null
+  },
+  "_requiredBy": [
+    "#USER",
+    "/"
+  ],
+  "_resolved": "git+https://github.com/fullstackmofo/mPos-updated.git#9aa8533e00aaf435ca876a2b399ce1d57d09d721",
+  "_spec": "git+https://github.com/fullstackmofo/mPos-updated.git",
+  "_where": "/Users/fangzhengwei/Desktop/fz/shenzhenfeifeng_ionic/pos_ionic_demo",
+  "author": {
+    "name": "chenqianmeng"
+  },
+  "bundleDependencies": false,
+  "cordova": {
+    "id": "posPlugin",
+    "platforms": [
+      "android"
+    ]
+  },
+  "deprecated": false,
+  "description": "dspread pos blu plugin",
+  "keywords": [
+    "ecosystem:cordova",
+    "cordova-android"
+  ],
+  "license": "ISC",
+  "name": "posPlugin",
+  "version": "1.0.0"
+}

@@ -1,0 +1,7 @@
+{
+  "name": "bluetoothTest",
+  "integrations": {
+    "cordova": {}
+  },
+  "type": "ionic-angular"
+}

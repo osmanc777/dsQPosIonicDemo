@@ -1,0 +1,62 @@
+<ion-header>
+  <ion-navbar>
+    <ion-title>
+      Ionic Blank
+    </ion-title>
+  </ion-navbar>
+</ion-header>
+
+<ion-content padding>
+  <hr>
+  <ion-item>
+
+    <button (click)="searchBt()" style="padding: 15px; margin: 4px;">Buscar MPOS</button>
+
+    <div class="list" *ngIf="list.length > 0">
+      <p>Listado de Dispositivos</p>
+      <hr>
+      <p *ngFor="let device of list" (click)="connect(device)">{{device.name}}</p>
+    </div>
+
+  </ion-item>
+  
+  <ion-item>
+    <button (click)="showInfo()" style="padding: 15px; margin-bottom: 3px;">Obtener Tarjeta: Chip/Swipe</button>
+  </ion-item>
+  
+  <ion-item>
+    <button (click)="getQposInfo()" style="padding: 15px">Información del MPOS</button>
+  </ion-item>
+  
+  <ion-item>
+    <button (click)="getQposId()" style="padding: 15px">Obtener id del MPOS</button>
+  </ion-item>
+  
+  <ion-item>
+    <button (click)="asingCard()" style="padding: 15px">Mostar Tarjeta</button>
+  </ion-item>
+  
+  <ion-item>
+    <button (click)="stopObserSteps()" style="padding: 15px">Detener obser</button>
+  </ion-item>
+  
+  <ion-item>
+    <p>
+      Tarjeta
+    </p>
+
+    <pre>
+      <code>
+        {{ cardInfo }}
+      </code>
+    </pre>
+  </ion-item>
+  
+  <!-- <ion-item>
+    <button (click)="updateEmvConfig()" style="padding: 15px">Update Emv Config by Bin</button>
+  </ion-item>
+  
+  <ion-item>
+    <button (click)="updateEmv()" style="padding: 15px">Update Emv Config by Tag</button>
+  </ion-item> -->
+</ion-content>
