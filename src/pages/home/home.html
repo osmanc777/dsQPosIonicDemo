@@ -1,13 +1,13 @@
 <ion-header>
   <ion-navbar>
     <ion-title>
-      Ionic Blank
+      Tes QMPOS Pagalo
     </ion-title>
   </ion-navbar>
 </ion-header>
 
 <ion-content padding>
-  <hr>
+
   <ion-item>
 
     <button (click)="searchBt()" style="padding: 15px; margin: 4px;">Buscar MPOS</button>
@@ -40,14 +40,14 @@
     <button (click)="stopObserSteps()" style="padding: 15px">Detener obser</button>
   </ion-item>
   
-  <ion-item>
+  <ion-item *ngIf="showCard">
     <p>
       Tarjeta
     </p>
 
     <pre>
       <code>
-        {{ cardInfo }}
+        {{ cardInfo | json }}
       </code>
     </pre>
   </ion-item>

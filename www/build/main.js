@@ -89,20 +89,30 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 window.getMposInfo = function (data) {
     window.dataPOS = data;
     window.payLoad = data;
-    console.log('data ts: ', data);
+    // console.log('data ts: ', data);
 };
 var HomePage = /** @class */ (function () {
-    function HomePage(navCtrl, btSerial, alert, plt, mpos) {
+    function HomePage(navCtrl, btSerial, alert, plt, mpos, toastCtrl) {
         this.navCtrl = navCtrl;
         this.btSerial = btSerial;
         this.alert = alert;
         this.plt = plt;
         this.mpos = mpos;
+        this.toastCtrl = toastCtrl;
         this.list = [];
+        this.showCard = false;
         this.onQposConnected = false; //Conecto MPOS:
         this.onQposDisconnected = false; //Desconecto MPOS:
+        this.onQposBadSwipe = false; //no reconocio la tarjeta swipe MPOS:
+        this.onQposNoCard = false; //no detecto ninguna tarjeta:
         this.onQposTransaction = false; //Preparar MPOS chip/banda:
         this.onQposCardInfo = false; //Obtener Card MPOS banda:
+        this.onQposTranChip = false; //inserto CardChip: icc_card_inserted/EMV_ICC_Start
+        this.onQposTranChipWait = false; //inserto CardChip: please wait..
+        this.onQposTranChipRead = false; //leyendo CardChip: processing...
+        this.onQposTranChipRemove = false; //remover CardChip:remove card
+        this.resChip = false; //respuesta chip
+        this.objectCardData = {};
     }
     HomePage.prototype.searchBt = function () {
         var _this = this;
@@ -127,6 +137,18 @@ var HomePage = /** @class */ (function () {
             // this.alert.create({ title:"Conexión Fallida", message: error ,buttons:['Ok']}).present();
             // console.log(error)
         }, true, mac);
+        this.onQposConnected = false;
+        this.onQposDisconnected = false;
+        this.onQposBadSwipe = false;
+        this.onQposNoCard = false;
+        this.onQposTransaction = false;
+        this.onQposCardInfo = false;
+        this.onQposTranChip = false;
+        this.onQposTranChipWait = false;
+        this.onQposTranChipRead = false;
+        this.onQposTranChipRemove = false;
+        this.resChip = false;
+        this.paramPos = '';
         this.obserSteps();
     };
     HomePage.prototype.showInfo = function () {
@@ -139,9 +161,22 @@ var HomePage = /** @class */ (function () {
             console.log(error);
             _this.alert.create({ title: "Conexión Fallida", message: error, buttons: ['Ok'] }).present();
         }, 30);
+        this.onQposConnected = false;
+        this.onQposDisconnected = false;
+        this.onQposBadSwipe = false;
+        this.onQposNoCard = false;
+        this.onQposTransaction = false;
+        this.onQposCardInfo = false;
+        this.onQposTranChip = false;
+        this.onQposTranChipWait = false;
+        this.onQposTranChipRead = false;
+        this.onQposTranChipRemove = false;
+        this.resChip = false;
+        this.paramPos = '';
     };
     HomePage.prototype.asingCard = function () {
-        this.cardInfo = window.dataPOS;
+        this.showCard = true;
+        this.cardInfo = this.objectCardData;
     };
     HomePage.prototype.getQposInfo = function () {
         var _this = this;
@@ -161,54 +196,102 @@ var HomePage = /** @class */ (function () {
             _this.alert.create({ title: "Error getQposId", message: error, buttons: ['Ok'] }).present();
         });
     };
-    HomePage.prototype.showAlert = function (msg) {
-        this.alert.create({ title: msg, buttons: ['Ok'] }).present();
+    HomePage.prototype.showAlert = function (title, msg) {
+        this.alert.create({ title: title, message: msg, buttons: ['Ok'] }).present();
+    };
+    HomePage.prototype.presentToastInfo = function (message) {
+        var toast = this.toastCtrl.create({
+            message: message,
+            duration: 1000,
+            position: 'bottom'
+        });
+        toast.present();
     };
     HomePage.prototype.obserSteps = function () {
         var _this = this;
-        this.sub = __WEBPACK_IMPORTED_MODULE_5_rxjs__["Observable"].interval(3000).subscribe(function () {
-            if (window.payLoad != undefined) {
-                window.payLoad.startsWith('swipe card:') ? window.payLoad = 'getCard' : window.payLoad;
-                console.log('get data in TS Card: ', window.payLoad);
+        this.sub = __WEBPACK_IMPORTED_MODULE_5_rxjs__["Observable"].interval(1000).subscribe(function (val) {
+            _this.paramPos = window.payLoad;
+            if (_this.paramPos != undefined) {
+                _this.paramPos.startsWith('swipe card:') ? _this.paramPos = 'getCard' : _this.paramPos;
+                console.log('get data in TS Card: ', _this.paramPos);
             }
             else {
                 console.log('payLoad esta indefinido');
             }
-            if (window.payLoad == 'onRequestQposConnected' && !_this.onQposConnected) {
+            console.log('*-----------*------------*---------------*');
+            console.log('ParamPOS:', _this.paramPos);
+            console.log('*-----------*------------*---------------*');
+            if (_this.paramPos === 'onRequestQposConnected' && !_this.onQposConnected) {
                 _this.onQposConnected = true;
-                console.log('Conexión Exitosa');
-                _this.showAlert('Conexión Exitosa');
+                // console.log('Conexión Exitosa');
+                _this.presentToastInfo('Conexión Exitosa');
             }
-            else if (window.payLoad == 'onRequestQposDisconnected' && !_this.onQposDisconnected) {
+            else if (_this.paramPos === 'onRequestQposDisconnected' && !_this.onQposDisconnected) {
                 _this.onQposDisconnected = true;
-                console.log('Se desconecto el Mpos');
+                _this.showAlert('MPOS desconectado', 'Vuelve a conectar el MPOS para cobrar');
+                _this.stopObserSteps();
             }
-            else if (window.payLoad == 'please insert/swipe/tap card' && !_this.onQposTransaction) {
+            else if (_this.paramPos === 'please insert/swipe/tap card' && !_this.onQposTransaction) {
                 _this.onQposTransaction = true;
-                console.log('Insertando tarjeta');
+                _this.presentToastInfo('MPOS listo para cobrar');
+                // console.log('Insertando tarjeta');
             }
-            else if (window.payLoad == 'getCard' && !_this.onQposCardInfo) {
-                console.log('Info Card MPOS:', window.dataPOS);
+            else if (_this.paramPos === 'bad_swipe' && !_this.onQposBadSwipe) {
+                _this.onQposBadSwipe = true;
+                // console.log('No se reconocio la tarjeta vuelve a intentar');
+                // this.showAlert('Error Swipe', 'Vuelve a ingresar la tarjeta');
+                _this.presentToastInfo('No se reconocio la tarjeta, vuelve a intentar');
+            }
+            else if (_this.paramPos === 'no_card_detected' && !_this.onQposNoCard) {
+                _this.onQposNoCard = true;
+                // console.log('No se detecto ninguna tarjeta:');
+                _this.showAlert('Error en Tarjeta', 'No se reconocio la tarjeta, vuelve a ingresarla');
+            }
+            else if (_this.paramPos == 'getCard' && !_this.onQposCardInfo) {
+                _this.onQposCardInfo = true;
+                // console.log('Info Card MPOS:', this.paramPos);
+                _this.showAlert('Tarjeta Aceptada', 'Acepta para realizar el cobro');
+                _this.parseCard(window.dataPOS);
                 _this.asingCard();
                 _this.stopObserSteps();
-                _this.showAlert('Tarjeta Aceptada');
+            }
+            else if (_this.paramPos === 'icc_card_inserted/EMV_ICC_Start' && !_this.onQposTranChip) {
+                _this.onQposTranChip = true;
+                console.log('inserto el chip de latarjeta:');
+                _this.presentToastInfo('Tarjeta Insertada');
             }
             else {
-                console.log('ninguna acción');
+                console.log('ninguna acción: ', val);
+                // console.log('onQposTranChip: ', this.onQposTranChip);
+                // console.log('onQposTranChipWait: ', this.onQposTranChipWait);
+                // console.log('onQposTranChipRead: ', this.onQposTranChipRead);
+                // console.log('onQposTranChipRemove: ', this.onQposTranChipRemove);
+                // console.log('resChip: ', this.resChip);
             }
         });
     };
     HomePage.prototype.stopObserSteps = function () {
         this.sub.unsubscribe();
     };
+    HomePage.prototype.parseCard = function (card) {
+        var _this = this;
+        this.cardDetail = card.split(',');
+        this.cardDetail.forEach(function (element) {
+            var propiedad = element.split('_').shift();
+            var valor = element.substring(element.indexOf('_') + 1);
+            _this.objectCardData[propiedad] = valor.trim();
+        });
+        console.log('************ card detail *****************');
+        console.log(this.objectCardData);
+    };
     HomePage = __decorate([
         Object(__WEBPACK_IMPORTED_MODULE_0__angular_core__["m" /* Component */])({
-            selector: 'page-home',template:/*ion-inline-start:"/Users/jupiter/Apps/pos_ionic_demo/src/pages/home/home.html"*/'<ion-header>\n  <ion-navbar>\n    <ion-title>\n      Ionic Blank\n    </ion-title>\n  </ion-navbar>\n</ion-header>\n\n<ion-content padding>\n  <hr>\n  <ion-item>\n\n    <button (click)="searchBt()" style="padding: 15px; margin: 4px;">Buscar MPOS</button>\n\n    <div class="list" *ngIf="list.length > 0">\n      <p>Listado de Dispositivos</p>\n      <hr>\n      <p *ngFor="let device of list" (click)="connect(device)">{{device.name}}</p>\n    </div>\n\n  </ion-item>\n  \n  <ion-item>\n    <button (click)="showInfo()" style="padding: 15px; margin-bottom: 3px;">Obtener Tarjeta: Chip/Swipe</button>\n  </ion-item>\n  \n  <ion-item>\n    <button (click)="getQposInfo()" style="padding: 15px">Información del MPOS</button>\n  </ion-item>\n  \n  <ion-item>\n    <button (click)="getQposId()" style="padding: 15px">Obtener id del MPOS</button>\n  </ion-item>\n  \n  <ion-item>\n    <button (click)="asingCard()" style="padding: 15px">Mostar Tarjeta</button>\n  </ion-item>\n  \n  <ion-item>\n    <button (click)="stopObserSteps()" style="padding: 15px">Detener obser</button>\n  </ion-item>\n  \n  <ion-item>\n    <p>\n      Tarjeta\n    </p>\n\n    <pre>\n      <code>\n        {{ cardInfo }}\n      </code>\n    </pre>\n  </ion-item>\n  \n  <!-- <ion-item>\n    <button (click)="updateEmvConfig()" style="padding: 15px">Update Emv Config by Bin</button>\n  </ion-item>\n  \n  <ion-item>\n    <button (click)="updateEmv()" style="padding: 15px">Update Emv Config by Tag</button>\n  </ion-item> -->\n</ion-content>\n'/*ion-inline-end:"/Users/jupiter/Apps/pos_ionic_demo/src/pages/home/home.html"*/
+            selector: 'page-home',template:/*ion-inline-start:"/Users/jupiter/Apps/pos_ionic_demo/src/pages/home/home.html"*/'<ion-header>\n  <ion-navbar>\n    <ion-title>\n      Tes QMPOS Pagalo\n    </ion-title>\n  </ion-navbar>\n</ion-header>\n\n<ion-content padding>\n\n  <ion-item>\n\n    <button (click)="searchBt()" style="padding: 15px; margin: 4px;">Buscar MPOS</button>\n\n    <div class="list" *ngIf="list.length > 0">\n      <p>Listado de Dispositivos</p>\n      <hr>\n      <p *ngFor="let device of list" (click)="connect(device)">{{device.name}}</p>\n    </div>\n\n  </ion-item>\n  \n  <ion-item>\n    <button (click)="showInfo()" style="padding: 15px; margin-bottom: 3px;">Obtener Tarjeta: Chip/Swipe</button>\n  </ion-item>\n  \n  <ion-item>\n    <button (click)="getQposInfo()" style="padding: 15px">Información del MPOS</button>\n  </ion-item>\n  \n  <ion-item>\n    <button (click)="getQposId()" style="padding: 15px">Obtener id del MPOS</button>\n  </ion-item>\n  \n  <ion-item>\n    <button (click)="asingCard()" style="padding: 15px">Mostar Tarjeta</button>\n  </ion-item>\n  \n  <ion-item>\n    <button (click)="stopObserSteps()" style="padding: 15px">Detener obser</button>\n  </ion-item>\n  \n  <ion-item *ngIf="showCard">\n    <p>\n      Tarjeta\n    </p>\n\n    <pre>\n      <code>\n        {{ cardInfo | json }}\n      </code>\n    </pre>\n  </ion-item>\n  \n  <!-- <ion-item>\n    <button (click)="updateEmvConfig()" style="padding: 15px">Update Emv Config by Bin</button>\n  </ion-item>\n  \n  <ion-item>\n    <button (click)="updateEmv()" style="padding: 15px">Update Emv Config by Tag</button>\n  </ion-item> -->\n</ion-content>\n'/*ion-inline-end:"/Users/jupiter/Apps/pos_ionic_demo/src/pages/home/home.html"*/
         }),
-        __metadata("design:paramtypes", [typeof (_a = typeof __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["f" /* NavController */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["f" /* NavController */]) === "function" && _a || Object, typeof (_b = typeof __WEBPACK_IMPORTED_MODULE_2__ionic_native_bluetooth_serial__["a" /* BluetoothSerial */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_2__ionic_native_bluetooth_serial__["a" /* BluetoothSerial */]) === "function" && _b || Object, typeof (_c = typeof __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["a" /* AlertController */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["a" /* AlertController */]) === "function" && _c || Object, typeof (_d = typeof __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["h" /* Platform */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["h" /* Platform */]) === "function" && _d || Object, typeof (_e = typeof __WEBPACK_IMPORTED_MODULE_3__providers_mpos_mpos__["a" /* MposProvider */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_3__providers_mpos_mpos__["a" /* MposProvider */]) === "function" && _e || Object])
+        __metadata("design:paramtypes", [typeof (_a = typeof __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["f" /* NavController */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["f" /* NavController */]) === "function" && _a || Object, typeof (_b = typeof __WEBPACK_IMPORTED_MODULE_2__ionic_native_bluetooth_serial__["a" /* BluetoothSerial */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_2__ionic_native_bluetooth_serial__["a" /* BluetoothSerial */]) === "function" && _b || Object, typeof (_c = typeof __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["a" /* AlertController */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["a" /* AlertController */]) === "function" && _c || Object, typeof (_d = typeof __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["h" /* Platform */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["h" /* Platform */]) === "function" && _d || Object, typeof (_e = typeof __WEBPACK_IMPORTED_MODULE_3__providers_mpos_mpos__["a" /* MposProvider */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_3__providers_mpos_mpos__["a" /* MposProvider */]) === "function" && _e || Object, typeof (_f = typeof __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["i" /* ToastController */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["i" /* ToastController */]) === "function" && _f || Object])
     ], HomePage);
     return HomePage;
-    var _a, _b, _c, _d, _e;
+    var _a, _b, _c, _d, _e, _f;
 }());
 
 //# sourceMappingURL=home.js.map

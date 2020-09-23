@@ -6,9 +6,9 @@ function posresult(data) {
     // window.cardDetails = data;
     // result = window.cardDetails;
     // console.log('result: ', data);
-    console.log('*-----------*------------*---------------*');
+    // console.log('*-----------*------------*---------------*');
     window.getMposInfo(data);
-    console.log('*-----------*------------*---------------*');
+    // console.log('*-----------*------------*---------------*');
 }
 
 // function starScan(data) {

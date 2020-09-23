@@ -540,15 +540,19 @@ public class dspread_pos_plugin extends CordovaPlugin {
 		public void onDoTradeResult(DoTradeResult arg0, Hashtable<String, String> arg1) {
 			if (arg0 == DoTradeResult.NONE) {
 				TRACE.d("no_card_detected");
+				callback("no_card_detected");
 			} else if (arg0 == DoTradeResult.ICC) {
 				TRACE.d("icc_card_inserted");
 				TRACE.d("EMV ICC Start");
+				callback("icc_card_inserted/EMV_ICC_Start");
 				pos.doEmvApp(EmvOption.START);//do the icc card trade
 			} else if (arg0 == DoTradeResult.NOT_ICC) {
 				TRACE.d("card_inserted(NOT_ICC)");
+				callback("card_inserted/NOT_ICC");
 			} else if (arg0 == DoTradeResult.BAD_SWIPE) {
 				TRACE.d("bad_swipe");
-			} else if (arg0 == DoTradeResult.MCR) {//
+				callback("bad_swipe");
+			} else if (arg0 == DoTradeResult.MCR) {
 				String content ="swipe card:";
 				String formatID = arg1.get("formatID");
 				if (formatID.equals("31") || formatID.equals("40") || formatID.equals("37") || formatID.equals("17") || formatID.equals("11") || formatID.equals("10")) {
@@ -591,7 +595,7 @@ public class dspread_pos_plugin extends CordovaPlugin {
 					String maskedPAN = arg1.get("maskedPAN");
 					String expiryDate = arg1.get("expiryDate");
 					String cardHolderName = arg1.get("cardholderName");
-//					String ksn = arg1.get("ksn");
+					// String ksn = arg1.get("ksn");
 					String serviceCode = arg1.get("serviceCode");
 					String track1Length = arg1.get("track1Length");
 					String track2Length = arg1.get("track2Length");
@@ -611,32 +615,33 @@ public class dspread_pos_plugin extends CordovaPlugin {
 					if(orderID!=null&&!"".equals(orderID)){
 						content+="orderID:"+orderID;
 					}
-					content += "formatID" + " " + formatID + ",";
-					content += "maskedPAN" + " " + maskedPAN + ",";
-					content += "expiryDate" + " " + expiryDate + ",";
-					content += "cardHolderName" + " " + cardHolderName + ",";
-//					content += getString(R.string.ksn) + " " + ksn + ",";
-					content += "pinKsn" + " " + pinKsn + ",";
-					content += "trackksn" + " " + trackksn + ",";
-					content += "serviceCode" + " " + serviceCode + ",";
-					content += "track1Length" + " " + track1Length + ",";
-					content += "track2Length" + " " + track2Length + ",";
-					content += "track3Length" + " " + track3Length + ",";
-					content += "encTracks" + " " + encTracks + ",";
-					content += "encTrack1" + " " + encTrack1 + ",";
-					content += "encTrack2" + " " + encTrack2 + ",";
-					content += "encTrack3" + " " + encTrack3 + ",";
-					content += "partialTrack"+ " " + partialTrack + ",";
-					content += "pinBlock" + " " + pinBlock + ",";
-					content += "encPAN: " + encPAN + ",";
-					content += "trackRandomNumber: " + trackRandomNumber + ",";
-					content += "pinRandomNumber:" + " " + pinRandomNumber + "";
+					content += "formatID_" + formatID + ",";
+					content += "maskedPAN_" + maskedPAN + ",";
+					content += "expiryDate_" + expiryDate + ",";
+					content += "cardHolderName_" + cardHolderName + ",";
+					// content += getString(R.string.ksn) + ksn + ",";
+					content += "pinKsn_" + pinKsn + ",";
+					content += "trackksn_" + trackksn + ",";
+					content += "serviceCode_" + serviceCode + ",";
+					content += "track1Length_" + track1Length + ",";
+					content += "track2Length_" + track2Length + ",";
+					content += "track3Length_" + track3Length + ",";
+					content += "encTracks_" + encTracks + ",";
+					content += "encTrack1_" + encTrack1 + ",";
+					content += "encTrack2_" + encTrack2 + ",";
+					content += "encTrack3_" + encTrack3 + ",";
+					content += "partialTrack_"+ partialTrack + ",";
+					content += "pinBlock_" + pinBlock + ",";
+					content += "encPAN_" + encPAN + ",";
+					content += "trackRandomNumber_" + trackRandomNumber + ",";
+					content += "pinRandomNumber_" + pinRandomNumber + "";
 					callback(content);
 				}
+
 				TRACE.d("=====:" + content);
 			} else if ((arg0 == DoTradeResult.NFC_ONLINE) || (arg0 == DoTradeResult.NFC_OFFLINE)) {
 				TRACE.d(arg0+", arg1: " + arg1);
-//				nfcLog=arg1.get("nfcLog");
+				// nfcLog=arg1.get("nfcLog");
 				String content = "tap_card";
 				String formatID = arg1.get("formatID");
 				if (formatID.equals("31") || formatID.equals("40")
@@ -655,7 +660,7 @@ public class dspread_pos_plugin extends CordovaPlugin {
 					String trackRandomNumber = arg1
 							.get("trackRandomNumber");
 
-					content += "formatID" + " " + formatID
+					content += "formatID equals" + " " + formatID
 							+ "\n";
 					content += "maskedPAN" + " " + maskedPAN
 							+ "\n";
@@ -679,7 +684,7 @@ public class dspread_pos_plugin extends CordovaPlugin {
 					String maskedPAN = arg1.get("maskedPAN");
 					String expiryDate = arg1.get("expiryDate");
 					String cardHolderName = arg1.get("cardholderName");
-//					String ksn = arg1.get("ksn");
+					// String ksn = arg1.get("ksn");
 					String serviceCode = arg1.get("serviceCode");
 					String track1Length = arg1.get("track1Length");
 					String track2Length = arg1.get("track2Length");
@@ -698,7 +703,7 @@ public class dspread_pos_plugin extends CordovaPlugin {
 							.get("trackRandomNumber");
 					String pinRandomNumber = arg1.get("pinRandomNumber");
 
-					content +="formatID" + " " + formatID
+					content +="formatID elseF" + " " + formatID
 							+ ",";
 					content += "maskedPAN" + " " + maskedPAN
 							+ ",";
@@ -706,7 +711,7 @@ public class dspread_pos_plugin extends CordovaPlugin {
 							+ expiryDate + ",";
 					content += "cardHolderName"+ " "
 							+ cardHolderName + ",";
-//					content += getString(R.string.ksn) + " " + ksn + ",";
+					// content += getString(R.string.ksn) + " " + ksn + ",";
 					content += "pinKsn" + " " + pinKsn + ",";
 					content += "trackksn" + " " + trackksn
 							+ ",";
@@ -736,15 +741,17 @@ public class dspread_pos_plugin extends CordovaPlugin {
 							+ ",";
 				}
 				TRACE.w(arg0+": "+content);
-//				sendMsg(8003);
+				// sendMsg(8003);
 				Hashtable<String, String> h =  pos.getNFCBatchData();
 				TRACE.w("nfc batchdata: "+h);
 				content += "NFCbatchData: "+h.get("tlv");
 				callback(content);
 			} else if ((arg0 == DoTradeResult.NFC_DECLINED) ) {
 				TRACE.d("transaction_declined");
+				callback("transaction_declined");
 			}else if (arg0 == DoTradeResult.NO_RESPONSE) {
 				TRACE.d("card_no_response");
+				callback("card_no_response");
 			}
 		}
 
@@ -1040,7 +1047,8 @@ public class dspread_pos_plugin extends CordovaPlugin {
 
 		@Override
 		public void onRequestQposConnected() {
-			TRACE.w("onRequestQposConnected");
+			// TRACE.w("onRequestQposConnected");
+			TRACE.d("onRequestQposConnected");
 //			Toast.makeText(cordova.getActivity(), "onRequestQposConnected", Toast.LENGTH_LONG).show();
 			callback("onRequestQposConnected");
 		}
