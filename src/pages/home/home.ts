@@ -39,7 +39,6 @@ export class HomePage {
   sub: Subscription;
   showCard:boolean = false;
   cardDetail:any;
-
   paramPos: any;
 
   onQposConnected = false; //Conecto MPOS:
@@ -49,10 +48,12 @@ export class HomePage {
   onQposTransaction = false; //Preparar MPOS chip/banda:
   onQposCardInfo = false; //Obtener Card MPOS banda:
   
+  // onRequestDisplay
   onQposTranChip = false; //inserto CardChip: icc_card_inserted/EMV_ICC_Start
   onQposTranChipWait = false; //inserto CardChip: please wait..
   onQposTranChipRead = false; //leyendo CardChip: processing...
   onQposTranChipRemove = false; //remover CardChip:remove card
+  onQposTranChipCardRemove = false; //Error retiro la tarjeta:card removed
   resChip = false; //respuesta chip
 
   objectCardData: any = {};
@@ -96,8 +97,13 @@ export class HomePage {
     this.onQposTranChipWait = false;
     this.onQposTranChipRead = false;
     this.onQposTranChipRemove = false;
+    this.onQposTranChipCardRemove = false;
     this.resChip = false;
     this.paramPos = '';
+    this.cardDetail = {};
+    this.objectCardData = {};
+    window.dataPOS = '';
+    window.payLoad = '';
     this.obserSteps();
   }
 
@@ -123,8 +129,14 @@ export class HomePage {
     this.onQposTranChipWait = false;
     this.onQposTranChipRead = false;
     this.onQposTranChipRemove = false;
+    this.onQposTranChipCardRemove = false;
     this.resChip = false;
     this.paramPos = '';
+    this.cardDetail = {};
+    this.objectCardData = {};
+    window.dataPOS = '';
+    window.payLoad = '';
+    // this.obserSteps();
   }
 
   asingCard() {
@@ -168,8 +180,11 @@ export class HomePage {
       this.paramPos = window.payLoad;
 
       if (this.paramPos != undefined) {
-        this.paramPos.startsWith('swipe card:') ? this.paramPos = 'getCard' : this.paramPos;
+        this.paramPos.startsWith('swipe card:') ? this.paramPos = 'getCard' : 
+        this.paramPos.startsWith('chipCard_') ? this.paramPos = 'getCardChip' : this.paramPos;
+
         console.log('get data in TS Card: ', this.paramPos);
+        console.log('get data POS: ', window.dataPOS);
       } else {
         console.log('payLoad esta indefinido');
       }
@@ -211,48 +226,44 @@ export class HomePage {
         this.parseCard(window.dataPOS);
         this.asingCard();
         this.stopObserSteps();
-
-      } 
+      }
       
       else if (this.paramPos === 'icc_card_inserted/EMV_ICC_Start' && !this.onQposTranChip) {
         this.onQposTranChip = true;
         console.log('inserto el chip de latarjeta:');
         this.presentToastInfo('Tarjeta Insertada');
 
-      } 
-      
-      // else if (this.paramPos === 'please wait..' && !this.onQposTranChipWait) {
-      //   this.onQposTranChipWait = true;
-      //   console.log('leyendo tarjeta');
-      //   this.presentToastInfo('Reconociendo tarjeta...');
+      } else if (this.paramPos === 'card removed' && !this.onQposTranChipCardRemove) {
+        // this.presentToastInfo('Error se retiro la tarjeta, vuelva a intentar');
+        this.onQposTranChipCardRemove = true;
+        this.showAlert('Error', 'se retiro la tarjeta, vuelva a intentar');
+      } else if (this.paramPos === 'please wait..' && !this.onQposTranChipWait) {
+        this.onQposTranChipWait = true;
+        console.log('leyendo tarjeta');
+        this.presentToastInfo('Reconociendo tarjeta...');
 
-      // } else if (this.paramPos === 'processing...' && !this.onQposTranChipRead) {
-      //   this.onQposTranChipRead = true;
-      //   console.log('Procesando tarjeta');
-      //   this.presentToastInfo('Procesando tarjeta...');
+      } else if (this.paramPos === 'processing...' && !this.onQposTranChipRead) {
+        this.onQposTranChipRead = true;
+        console.log('Procesando tarjeta');
+        this.presentToastInfo('Procesando tarjeta...');
 
-      // } else if (this.paramPos === 'remove card' && !this.onQposTranChipRemove) {
-      //   this.onQposTranChipRemove = true;
-      //   console.log('Retira la tarjeta');
-      //   this.presentToastInfo('Puedes retirar la tarjeta');
+      } else if (this.paramPos === 'remove card' && !this.onQposTranChipRemove) {
+        this.onQposTranChipRemove = true;
+        console.log('Retira la tarjeta');
+        this.presentToastInfo('Puedes retirar la tarjeta');
 
-      // } else if (this.onQposTranChip && this.onQposTranChipWait && this.onQposTranChipRead && this.onQposTranChipRemove && !this.resChip) {
-      //   this.resChip = true;
-      //   console.log('Respuesta del Chip');
-      //   this.showAlert('Tarjeta Aceptada Chip', 'Acepta para realizar el cobro');
-      //   this.parseCard(window.dataPOS);
-      //   this.asingCard();
-      //   this.stopObserSteps();
+      } else if (this.paramPos === 'getCardChip' && !this.resChip) {
+        this.resChip = true;
+        console.log('Respuesta del Chip: ', window.dataPOS);
+        this.showAlert('Tarjeta Aceptada Chip', 'Acepta para realizar el cobro');
+        this.parseCardChip(window.dataPOS);
+        this.asingCard();
+        this.stopObserSteps();
 
-      // } 
+      }
       
       else {
         console.log('ninguna acción: ', val);
-        // console.log('onQposTranChip: ', this.onQposTranChip);
-        // console.log('onQposTranChipWait: ', this.onQposTranChipWait);
-        // console.log('onQposTranChipRead: ', this.onQposTranChipRead);
-        // console.log('onQposTranChipRemove: ', this.onQposTranChipRemove);
-        // console.log('resChip: ', this.resChip);
       }
     });
   }
@@ -271,6 +282,15 @@ export class HomePage {
     });
 
     console.log('************ card detail *****************');
+    console.log(this.objectCardData);
+  }
+  
+  parseCardChip(card: any) {
+    let prop  = card.split('_').shift();
+    let value = card.substring(card.indexOf('_') + 1);
+    this.objectCardData[prop] = value.trim();
+
+    console.log('************ card detail chip *****************');
     console.log(this.objectCardData);
   }
 
