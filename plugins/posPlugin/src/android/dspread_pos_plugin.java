@@ -67,6 +67,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Typeface;
 import android.os.Build;
+import android.os.CountDownTimer;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
@@ -104,6 +105,8 @@ public class dspread_pos_plugin extends CordovaPlugin {
     private String tradeResult;
     private boolean isStylus;
     private boolean is58mm;
+
+    public String messageChip = "";
 
     @Override
     public boolean execute(String action, JSONArray args, CallbackContext callbackContext) throws JSONException {
@@ -545,7 +548,20 @@ public class dspread_pos_plugin extends CordovaPlugin {
 				TRACE.d("icc_card_inserted");
 				TRACE.d("EMV ICC Start");
 				callback("icc_card_inserted/EMV_ICC_Start");
-				pos.doEmvApp(EmvOption.START);//do the icc card trade
+
+				new CountDownTimer(1000, 1000) {
+
+					@Override
+					public void onTick(long l) {
+						TRACE.d("inicio segundos doEmvApp funcion" + l / 1000);
+					}
+
+					@Override
+					public void onFinish() {
+						TRACE.d("final doEmvApp funcion");
+						pos.doEmvApp(EmvOption.START);//do the icc card trade
+					}
+				}.start();
 			} else if (arg0 == DoTradeResult.NOT_ICC) {
 				TRACE.d("card_inserted(NOT_ICC)");
 				callback("card_inserted/NOT_ICC");
@@ -963,8 +979,9 @@ public class dspread_pos_plugin extends CordovaPlugin {
 
 		@Override
 		public void onRequestBatchData(String arg0) {
+			//Respuesta Chip
 			if(arg0!=null){
-				callback(arg0);
+				callback("chipCard_" + arg0);
 				/*pos.disconnectBT();
 				tradeResult=arg0;
 				printResult(tradeResult);*/
@@ -989,8 +1006,10 @@ public class dspread_pos_plugin extends CordovaPlugin {
 			TRACE.d("onRequestDisplay");
 
 			String msg = "";
+
 			if (arg0 == Display.CLEAR_DISPLAY_MSG) {
 				msg = "" ;
+				messageChip = "";
 			} else if(arg0 == Display.MSR_DATA_READY){
 				AlertDialog.Builder builder=new AlertDialog.Builder(cordova.getActivity());
 				builder.setTitle("???");
@@ -1013,7 +1032,10 @@ public class dspread_pos_plugin extends CordovaPlugin {
 				msg = "card removed";
 			}
 			TRACE.d(msg);
+			//TRACE.d(messageChip);
+
 			callback(msg);
+			//callback(messageChip);
 		}
 
 		@Override
