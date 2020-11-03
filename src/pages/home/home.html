@@ -21,7 +21,7 @@
   </ion-item>
   
   <ion-item>
-    <button (click)="showInfo()" style="padding: 15px; margin-bottom: 3px;">Obtener Tarjeta: Chip/Swipe</button>
+    <button (click)="startTransaction()" style="padding: 15px; margin-bottom: 3px;">Obtener Tarjeta: Chip/Swipe</button>
   </ion-item>
   
   <ion-item>
@@ -34,10 +34,6 @@
   
   <ion-item>
     <button (click)="asingCard()" style="padding: 15px">Mostar Tarjeta</button>
-  </ion-item>
-  
-  <ion-item>
-    <button (click)="stopObserSteps()" style="padding: 15px">Detener obser</button>
   </ion-item>
   
   <ion-item *ngIf="showCard">

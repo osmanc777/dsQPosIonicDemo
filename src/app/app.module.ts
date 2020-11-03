@@ -7,7 +7,7 @@ import { StatusBar } from '@ionic-native/status-bar';
 import { MyApp } from './app.component';
 import { HomePage } from '../pages/home/home';
 import { BluetoothSerial } from '@ionic-native/bluetooth-serial';
-import { MapsPage } from '../pages/maps/maps';
+// import { MapsPage } from '../pages/maps/maps';
 import { Geolocation } from '@ionic-native/geolocation';
 import { CardIO } from '@ionic-native/card-io';
 import { MposProvider } from '../providers/mpos/mpos';
@@ -16,7 +16,7 @@ import { MposProvider } from '../providers/mpos/mpos';
   declarations: [
     MyApp,
     HomePage,
-    MapsPage
+    // MapsPage
   ],
   imports: [
     BrowserModule,
@@ -26,7 +26,7 @@ import { MposProvider } from '../providers/mpos/mpos';
   entryComponents: [
     MyApp,
     HomePage,
-    MapsPage
+    // MapsPage
   ],
   providers: [
     StatusBar,

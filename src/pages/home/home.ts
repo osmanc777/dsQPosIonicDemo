@@ -5,27 +5,13 @@ import { MposProvider } from '../../providers/mpos/mpos';
 import 'rxjs/add/observable/interval';
 import { Subscription, Observable } from 'rxjs';
 
-declare global {
-  interface Window {
-    getMposInfo: (data: any) => void;
-    dataPOS: any;
-    payLoad: any;
-  }
-}
-
-/**
- *
- * Conecto MPOS: onRequestQposConnected
- * Desconecto MPOS: onRequestQposDisconnected
- * Preparar MPOS chip/banda: please insert/swipe/tap card
- * Obtener Card MPOS banda: swipe card:
- *
-*/
-window.getMposInfo = function (data) {
-  window.dataPOS = data;
-  window.payLoad = data;
-  // console.log('data ts: ', data);
-};
+// declare global {
+//   interface Window {
+//     getMposInfo: (data: any) => void;
+//     dataPOS: any;
+//     payLoad: any;
+//   }
+// }
 
 @Component({
   selector: 'page-home',
@@ -59,7 +45,9 @@ export class HomePage {
   objectCardData: any = {};
 
   constructor(public navCtrl: NavController, private btSerial: BluetoothSerial, public alert: AlertController, public plt: Platform,
-              private mpos: MposProvider, public toastCtrl: ToastController) {}
+              private mpos: MposProvider, public toastCtrl: ToastController) {
+    this.initQpos();
+  }
 
   searchBt() {
     this.plt.ready().then(() => {
@@ -102,17 +90,10 @@ export class HomePage {
     this.paramPos = '';
     this.cardDetail = {};
     this.objectCardData = {};
-    window.dataPOS = '';
-    window.payLoad = '';
-    this.obserSteps();
   }
 
-  showInfo() {
-    this.mpos.doTrade((data: any) => {
-      this.navCtrl.push('CardDetailsPage', {data});
-      // console.log('Data doTrade ts: ', data);
-      // console.log('Get Card Fn doTrade:', cardMPOS);
-    },(error: any) => {
+  startTransaction() {
+    this.mpos.doTrade(() => {},(error: any) => {
       console.log(error)
       this.alert.create({ title:"Conexión Fallida", message: error ,buttons:['Ok']}).present();
     },
@@ -134,9 +115,6 @@ export class HomePage {
     this.paramPos = '';
     this.cardDetail = {};
     this.objectCardData = {};
-    window.dataPOS = '';
-    window.payLoad = '';
-    // this.obserSteps();
   }
 
   asingCard() {
@@ -175,101 +153,92 @@ export class HomePage {
     toast.present();
   }
 
-  obserSteps() {
-    this.sub = Observable.interval(1000).subscribe((val) => {
-      this.paramPos = window.payLoad;
+  initQpos() {
+    (window as any).posresult = (data: any) => {
+      // console.log('******************* data pos win ts ********************');
+      // console.log(data);
+      // console.log('******************* fin data pos win ts ********************');
 
-      if (this.paramPos != undefined) {
-        this.paramPos.startsWith('swipe card:') ? this.paramPos = 'getCard' : 
-        this.paramPos.startsWith('chipCard_') ? this.paramPos = 'getCardChip' : this.paramPos;
-
-        console.log('get data in TS Card: ', this.paramPos);
-        console.log('get data POS: ', window.dataPOS);
-      } else {
-        console.log('payLoad esta indefinido');
-      }
-
-      console.log('*-----------*------------*---------------*');
-      console.log('ParamPOS:',this.paramPos);
-      console.log('*-----------*------------*---------------*');
-
-      if (this.paramPos === 'onRequestQposConnected' && !this.onQposConnected) {
-        this.onQposConnected = true;
-        // console.log('Conexión Exitosa');
-        this.presentToastInfo('Conexión Exitosa');
-
-      } else if (this.paramPos === 'onRequestQposDisconnected' && !this.onQposDisconnected) {
-        this.onQposDisconnected = true;
-        this.showAlert('MPOS desconectado', 'Vuelve a conectar el MPOS para cobrar');
-        this.stopObserSteps();
-
-      } else if (this.paramPos === 'please insert/swipe/tap card' && !this.onQposTransaction) {
-        this.onQposTransaction = true;
-        this.presentToastInfo('MPOS listo para cobrar');
-        // console.log('Insertando tarjeta');
-
-      } else if (this.paramPos === 'bad_swipe' && !this.onQposBadSwipe) {
-        this.onQposBadSwipe = true;
-        // console.log('No se reconocio la tarjeta vuelve a intentar');
-        // this.showAlert('Error Swipe', 'Vuelve a ingresar la tarjeta');
-        this.presentToastInfo('No se reconocio la tarjeta, vuelve a intentar');
-
-      } else if (this.paramPos === 'no_card_detected' && !this.onQposNoCard) {
-        this.onQposNoCard = true;
-        // console.log('No se detecto ninguna tarjeta:');
-        this.showAlert('Error en Tarjeta', 'No se reconocio la tarjeta, vuelve a ingresarla');
-
-      } else if (this.paramPos == 'getCard' && !this.onQposCardInfo) {
-        this.onQposCardInfo = true;
-        // console.log('Info Card MPOS:', this.paramPos);
-        this.showAlert('Tarjeta Aceptada', 'Acepta para realizar el cobro');
-        this.parseCard(window.dataPOS);
-        this.asingCard();
-        this.stopObserSteps();
-      }
-      
-      else if (this.paramPos === 'icc_card_inserted/EMV_ICC_Start' && !this.onQposTranChip) {
-        this.onQposTranChip = true;
-        console.log('inserto el chip de latarjeta:');
-        this.presentToastInfo('Tarjeta Insertada');
-
-      } else if (this.paramPos === 'card removed' && !this.onQposTranChipCardRemove) {
-        // this.presentToastInfo('Error se retiro la tarjeta, vuelva a intentar');
-        this.onQposTranChipCardRemove = true;
-        this.showAlert('Error', 'se retiro la tarjeta, vuelva a intentar');
-      } else if (this.paramPos === 'please wait..' && !this.onQposTranChipWait) {
-        this.onQposTranChipWait = true;
-        console.log('leyendo tarjeta');
-        this.presentToastInfo('Reconociendo tarjeta...');
-
-      } else if (this.paramPos === 'processing...' && !this.onQposTranChipRead) {
-        this.onQposTranChipRead = true;
-        console.log('Procesando tarjeta');
-        this.presentToastInfo('Procesando tarjeta...');
-
-      } else if (this.paramPos === 'remove card' && !this.onQposTranChipRemove) {
-        this.onQposTranChipRemove = true;
-        console.log('Retira la tarjeta');
-        this.presentToastInfo('Puedes retirar la tarjeta');
-
-      } else if (this.paramPos === 'getCardChip' && !this.resChip) {
-        this.resChip = true;
-        console.log('Respuesta del Chip: ', window.dataPOS);
-        this.showAlert('Tarjeta Aceptada Chip', 'Acepta para realizar el cobro');
-        this.parseCardChip(window.dataPOS);
-        this.asingCard();
-        this.stopObserSteps();
-
-      }
-      
-      else {
-        console.log('ninguna acción: ', val);
-      }
-    });
+      this.getDataQpos(data);
+    }
   }
-  
-  stopObserSteps() {
-    this.sub.unsubscribe();
+
+  getDataQpos(data:any) {
+    this.paramPos = data;
+
+    if (this.paramPos != undefined) {
+      this.paramPos.startsWith('swipe card:') ? this.paramPos = 'getCard' : 
+      this.paramPos.startsWith('chipCard_') ? this.paramPos = 'getCardChip' : this.paramPos;
+    } else {
+      console.log('payLoad esta indefinido');
+    }
+
+    console.log('*-----------*------------*---------------*');
+    console.log('ParamPOS NEW:',this.paramPos);
+    console.log('*-----------*------------*---------------*');
+
+    if (this.paramPos === 'onRequestQposConnected' && !this.onQposConnected) {
+      this.onQposConnected = true;
+      this.presentToastInfo('Conexión Exitosa');
+
+    } else if (this.paramPos === 'onRequestQposDisconnected' && !this.onQposDisconnected) {
+      this.onQposDisconnected = true;
+      this.showAlert('MPOS desconectado', 'Vuelve a conectar el MPOS para cobrar');
+
+    } else if (this.paramPos === 'please insert/swipe/tap card' && !this.onQposTransaction) {
+      this.onQposTransaction = true;
+      this.presentToastInfo('MPOS listo para cobrar');
+
+    } else if (this.paramPos === 'bad_swipe' && !this.onQposBadSwipe) {
+      this.onQposBadSwipe = true;
+      // this.showAlert('Error Swipe', 'Vuelve a ingresar la tarjeta');
+      this.presentToastInfo('No se reconocio la tarjeta, vuelve a intentar');
+
+    } else if (this.paramPos === 'no_card_detected' && !this.onQposNoCard) {
+      this.onQposNoCard = true;
+      this.showAlert('Error en Tarjeta', 'No se reconocio la tarjeta, vuelve a ingresarla');
+
+    } else if (this.paramPos == 'getCard' && !this.onQposCardInfo) {
+      this.onQposCardInfo = true;
+      this.showAlert('Tarjeta Aceptada', 'Acepta para realizar el cobro');
+      this.parseCard(data);
+      this.asingCard();
+    }
+    
+    else if (this.paramPos === 'icc_card_inserted/EMV_ICC_Start' && !this.onQposTranChip) {
+      this.onQposTranChip = true;
+      console.log('inserto el chip de latarjeta:');
+      this.presentToastInfo('Tarjeta Insertada');
+
+    } else if (this.paramPos === 'card removed' && !this.onQposTranChipCardRemove) {
+      this.onQposTranChipCardRemove = true;
+      this.showAlert('Error', 'se retiro la tarjeta, vuelva a intentar');
+    } else if (this.paramPos === 'please wait..' && !this.onQposTranChipWait) {
+      this.onQposTranChipWait = true;
+      console.log('leyendo tarjeta');
+      this.presentToastInfo('Reconociendo tarjeta...');
+
+    } else if (this.paramPos === 'processing...' && !this.onQposTranChipRead) {
+      this.onQposTranChipRead = true;
+      console.log('Procesando tarjeta');
+      this.presentToastInfo('Procesando tarjeta...');
+
+    } else if (this.paramPos === 'remove card' && !this.onQposTranChipRemove) {
+      this.onQposTranChipRemove = true;
+      console.log('Retira la tarjeta');
+      this.presentToastInfo('Puedes retirar la tarjeta');
+
+    } else if (this.paramPos === 'getCardChip' && !this.resChip) {
+      this.resChip = true;
+      console.log('Respuesta del Chip: ', data);
+      this.showAlert('Tarjeta Aceptada Chip', 'Acepta para realizar el cobro');
+      this.parseCardChip(data);
+      this.asingCard();
+    }
+    
+    else {
+      console.log('ninguna acción: ', data);
+    }
   }
 
   parseCard(card: any) {
