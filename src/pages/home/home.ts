@@ -2,16 +2,6 @@ import { Component } from '@angular/core';
 import { NavController, AlertController, Platform, ToastController } from 'ionic-angular';
 import { BluetoothSerial } from '@ionic-native/bluetooth-serial';
 import { MposProvider } from '../../providers/mpos/mpos';
-import 'rxjs/add/observable/interval';
-import { Subscription, Observable } from 'rxjs';
-
-// declare global {
-//   interface Window {
-//     getMposInfo: (data: any) => void;
-//     dataPOS: any;
-//     payLoad: any;
-//   }
-// }
 
 @Component({
   selector: 'page-home',
@@ -22,7 +12,6 @@ export class HomePage {
 
   list: Array<any> = [];
   cardInfo:any;
-  sub: Subscription;
   showCard:boolean = false;
   cardDetail:any;
   paramPos: any;
