@@ -11,8 +11,6 @@ posPlug.prototype.connectBluetoothDevice = function(success,fail,isConnect,bluet
 };
 
 posPlug.prototype.doTrade = function(success,faill,timeout) {
-	console.log("Osman: posPlug.prototype.doTrade");
-
 	cordova.exec(success,faill,"dspread_pos_plugin","doTrade",[timeout]);
 };
 
